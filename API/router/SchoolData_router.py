@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from controllers.SchoolData_controller import (
+from API.controllers.SchoolData_controller import (
     get_all_school_data, get_summary, get_grade_level_breakdown, get_grade_level_by_name,
     get_monthly_attendance_trend, get_attendance_status, get_gender_distribution,
     get_streams_breakdown, update_school_data
