@@ -7,16 +7,10 @@ void main() {
   runApp(const StudentDashboardApp());
 }
 
-// ---------- API CONFIG ----------
-// Change this to match where your FastAPI server is running.
-// - Android emulator -> use 10.0.2.2 instead of 127.0.0.1
-// - iOS simulator / desktop / web -> 127.0.0.1 is fine
-// - Physical device -> use your PC's LAN IP, e.g. 192.168.x.x
 class ApiConfig {
   static const String baseUrl = 'http://127.0.0.1:8000/schooldata';
 }
 
-// ---------- API SERVICE ----------
 class SchoolDataService {
   static Future<SchoolData> fetchAll() async {
     final res = await http.get(Uri.parse('${ApiConfig.baseUrl}/all'));
@@ -28,7 +22,6 @@ class SchoolDataService {
   }
 }
 
-// ---------- DATA MODELS (mirrors school_data.json) ----------
 class SchoolData {
   final Summary summary;
   final List<GradeLevel> gradeLevelBreakdown;
