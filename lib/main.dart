@@ -39,7 +39,8 @@ class DashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardColor = isDark ? const Color(0xFF1E1E1C) : Colors.white;
-    final mutedColor = isDark ? const Color(0xFFC3C2B7) : const Color(0xFF52514E);
+    final mutedColor =
+        isDark ? const Color(0xFFC3C2B7) : const Color(0xFF52514E);
 
     return Scaffold(
       appBar: AppBar(
@@ -212,7 +213,8 @@ class _MetricCard extends StatelessWidget {
           Text(label, style: TextStyle(fontSize: 13, color: mutedColor)),
           const SizedBox(height: 4),
           Text(value,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w500)),
+              style:
+                  const TextStyle(fontSize: 24, fontWeight: FontWeight.w500)),
           const SizedBox(height: 4),
           Text(
             delta,
@@ -253,7 +255,9 @@ class _SectionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+          Text(title,
+              style:
+                  const TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
           const SizedBox(height: 12),
           child,
           if (legend != null) ...[
@@ -276,7 +280,11 @@ class _LegendItem extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(width: 10, height: 10, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2))),
+        Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+                color: color, borderRadius: BorderRadius.circular(2))),
         const SizedBox(width: 4),
         Text(label, style: const TextStyle(fontSize: 12)),
       ],
@@ -290,7 +298,15 @@ class _GradeLevelChart extends StatelessWidget {
   const _GradeLevelChart();
 
   static const grades = ['ມ.1', 'ມ.2', 'ມ.3', 'ມ.4', 'ມ.5', 'ມ.6', 'ມ.7'];
-  static const normal = [2630.0, 2565.0, 2485.0, 2430.0, 2575.0, 2622.0, 2677.0];
+  static const normal = [
+    2630.0,
+    2565.0,
+    2485.0,
+    2430.0,
+    2575.0,
+    2622.0,
+    2677.0
+  ];
   static const absent = [20.0, 15.0, 15.0, 20.0, 25.0, 20.0, 23.0];
 
   @override
@@ -304,18 +320,22 @@ class _GradeLevelChart extends StatelessWidget {
           gridData: FlGridData(
             drawVerticalLine: false,
             horizontalInterval: 500,
-            getDrawingHorizontalLine: (v) => FlLine(color: Colors.grey.withOpacity(0.15), strokeWidth: 1),
+            getDrawingHorizontalLine: (v) =>
+                FlLine(color: Colors.grey.withOpacity(0.15), strokeWidth: 1),
           ),
           borderData: FlBorderData(show: false),
           titlesData: FlTitlesData(
-            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            topTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
             leftTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
                 interval: 500,
                 reservedSize: 44,
-                getTitlesWidget: (v, meta) => Text(v.toInt().toString(), style: const TextStyle(fontSize: 11)),
+                getTitlesWidget: (v, meta) => Text(v.toInt().toString(),
+                    style: const TextStyle(fontSize: 11)),
               ),
             ),
             bottomTitles: AxisTitles(
@@ -323,10 +343,12 @@ class _GradeLevelChart extends StatelessWidget {
                 showTitles: true,
                 getTitlesWidget: (v, meta) {
                   final i = v.toInt();
-                  if (i < 0 || i >= grades.length) return const SizedBox.shrink();
+                  if (i < 0 || i >= grades.length)
+                    return const SizedBox.shrink();
                   return Padding(
                     padding: const EdgeInsets.only(top: 6),
-                    child: Text(grades[i], style: const TextStyle(fontSize: 12)),
+                    child:
+                        Text(grades[i], style: const TextStyle(fontSize: 12)),
                   );
                 },
               ),
@@ -340,13 +362,15 @@ class _GradeLevelChart extends StatelessWidget {
                   toY: normal[i],
                   color: const Color(0xFF1BAF7A),
                   width: 12,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(3)),
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(3)),
                 ),
                 BarChartRodData(
                   toY: absent[i],
                   color: const Color(0xFFE34948),
                   width: 12,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(3)),
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(3)),
                 ),
               ],
               barsSpace: 4,
@@ -376,17 +400,21 @@ class _MonthlyTrendChart extends StatelessWidget {
           maxY: 100,
           gridData: FlGridData(
             drawVerticalLine: false,
-            getDrawingHorizontalLine: (v) => FlLine(color: Colors.grey.withOpacity(0.15), strokeWidth: 1),
+            getDrawingHorizontalLine: (v) =>
+                FlLine(color: Colors.grey.withOpacity(0.15), strokeWidth: 1),
           ),
           borderData: FlBorderData(show: false),
           titlesData: FlTitlesData(
-            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            topTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
             leftTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
                 reservedSize: 40,
-                getTitlesWidget: (v, meta) => Text('${v.toInt()}%', style: const TextStyle(fontSize: 11)),
+                getTitlesWidget: (v, meta) =>
+                    Text('${v.toInt()}%', style: const TextStyle(fontSize: 11)),
               ),
             ),
             bottomTitles: AxisTitles(
@@ -394,10 +422,12 @@ class _MonthlyTrendChart extends StatelessWidget {
                 showTitles: true,
                 getTitlesWidget: (v, meta) {
                   final i = v.toInt();
-                  if (i < 0 || i >= months.length) return const SizedBox.shrink();
+                  if (i < 0 || i >= months.length)
+                    return const SizedBox.shrink();
                   return Padding(
                     padding: const EdgeInsets.only(top: 6),
-                    child: Text(months[i], style: const TextStyle(fontSize: 12)),
+                    child:
+                        Text(months[i], style: const TextStyle(fontSize: 12)),
                   );
                 },
               ),
@@ -405,12 +435,14 @@ class _MonthlyTrendChart extends StatelessWidget {
           ),
           lineBarsData: [
             LineChartBarData(
-              spots: List.generate(rates.length, (i) => FlSpot(i.toDouble(), rates[i])),
+              spots: List.generate(
+                  rates.length, (i) => FlSpot(i.toDouble(), rates[i])),
               isCurved: true,
               color: const Color(0xFF2A78D6),
               barWidth: 2,
               dotData: const FlDotData(show: true),
-              belowBarData: BarAreaData(show: true, color: const Color(0xFF2A78D6).withOpacity(0.1)),
+              belowBarData: BarAreaData(
+                  show: true, color: const Color(0xFF2A78D6).withOpacity(0.1)),
             ),
           ],
         ),
@@ -487,7 +519,8 @@ class _HorizontalBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ratio = item.maxValue == 0 ? 0.0 : (item.value / item.maxValue).clamp(0.0, 1.0);
+    final ratio =
+        item.maxValue == 0 ? 0.0 : (item.value / item.maxValue).clamp(0.0, 1.0);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -496,7 +529,9 @@ class _HorizontalBar extends StatelessWidget {
           children: [
             Text(item.label, style: TextStyle(fontSize: 12, color: mutedColor)),
             Text(
-              item.value % 1 == 0 ? item.value.toInt().toString() : item.value.toStringAsFixed(2),
+              item.value % 1 == 0
+                  ? item.value.toInt().toString()
+                  : item.value.toStringAsFixed(2),
               style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
             ),
           ],
@@ -508,8 +543,14 @@ class _HorizontalBar extends StatelessWidget {
             builder: (context, constraints) {
               return Stack(
                 children: [
-                  Container(height: 10, width: constraints.maxWidth, color: item.color.withOpacity(0.15)),
-                  Container(height: 10, width: constraints.maxWidth * ratio, color: item.color),
+                  Container(
+                      height: 10,
+                      width: constraints.maxWidth,
+                      color: item.color.withOpacity(0.15)),
+                  Container(
+                      height: 10,
+                      width: constraints.maxWidth * ratio,
+                      color: item.color),
                 ],
               );
             },
