@@ -1,10 +1,206 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:http/http.dart' as http;
 
 void main() {
   runApp(const StudentDashboardApp());
 }
 
+class ApiConfig {
+  static const String baseUrl = 'http://127.0.0.1:8000/schooldata';
+}
+
+class SchoolDataService {
+  static Future<SchoolData> fetchAll() async {
+    final res = await http.get(Uri.parse('${ApiConfig.baseUrl}/all'));
+    if (res.statusCode != 200) {
+      throw Exception('Failed to load school data (${res.statusCode})');
+    }
+    final Map<String, dynamic> json = jsonDecode(utf8.decode(res.bodyBytes));
+    return SchoolData.fromJson(json);
+  }
+}
+
+class SchoolData {
+  final Summary summary;
+  final List<GradeLevel> gradeLevelBreakdown;
+  final List<MonthlyTrend> monthlyAttendanceTrend;
+  final AttendanceStatus attendanceStatus;
+  final GenderDistribution genderDistribution;
+  final StreamsBreakdown streamsBreakdown;
+
+  SchoolData({
+    required this.summary,
+    required this.gradeLevelBreakdown,
+    required this.monthlyAttendanceTrend,
+    required this.attendanceStatus,
+    required this.genderDistribution,
+    required this.streamsBreakdown,
+  });
+
+  factory SchoolData.fromJson(Map<String, dynamic> j) {
+    return SchoolData(
+      summary: Summary.fromJson(j['summary']),
+      gradeLevelBreakdown: (j['grade_level_breakdown'] as List)
+          .map((e) => GradeLevel.fromJson(e))
+          .toList(),
+      monthlyAttendanceTrend: (j['monthly_attendance_trend'] as List)
+          .map((e) => MonthlyTrend.fromJson(e))
+          .toList(),
+      attendanceStatus: AttendanceStatus.fromJson(j['attendance_status']),
+      genderDistribution: GenderDistribution.fromJson(j['gender_distribution']),
+      streamsBreakdown: StreamsBreakdown.fromJson(j['streams_breakdown']),
+    );
+  }
+}
+
+class Summary {
+  final int totalStudents;
+  final double changeFromLastMonthPercent;
+  final int normalCount;
+  final double normalPercent;
+  final int abnormalCount;
+  final double abnormalPercent;
+
+  Summary({
+    required this.totalStudents,
+    required this.changeFromLastMonthPercent,
+    required this.normalCount,
+    required this.normalPercent,
+    required this.abnormalCount,
+    required this.abnormalPercent,
+  });
+
+  factory Summary.fromJson(Map<String, dynamic> j) => Summary(
+        totalStudents: j['total_students'],
+        changeFromLastMonthPercent:
+            (j['change_from_last_month_percent'] as num).toDouble(),
+        normalCount: j['normal_attendance']['count'],
+        normalPercent: (j['normal_attendance']['percent'] as num).toDouble(),
+        abnormalCount: j['abnormal_attendance']['count'],
+        abnormalPercent:
+            (j['abnormal_attendance']['percent'] as num).toDouble(),
+      );
+}
+
+class GradeLevel {
+  final String grade;
+  final int total;
+  final int normal;
+  final int absent;
+
+  GradeLevel({
+    required this.grade,
+    required this.total,
+    required this.normal,
+    required this.absent,
+  });
+
+  factory GradeLevel.fromJson(Map<String, dynamic> j) => GradeLevel(
+        grade: j['grade'],
+        total: j['total'],
+        normal: j['normal'],
+        absent: j['absent'],
+      );
+}
+
+class MonthlyTrend {
+  final String month;
+  final double attendancePercent;
+  final double absentPercent;
+
+  MonthlyTrend({
+    required this.month,
+    required this.attendancePercent,
+    required this.absentPercent,
+  });
+
+  factory MonthlyTrend.fromJson(Map<String, dynamic> j) => MonthlyTrend(
+        month: j['month'],
+        attendancePercent: (j['attendance_percent'] as num).toDouble(),
+        absentPercent: (j['absent_percent'] as num).toDouble(),
+      );
+}
+
+class AttendanceStatus {
+  final double onTimeCount;
+  final double onTimePercent;
+  final double lateCount;
+  final double latePercent;
+  final double leaveCount;
+  final double leavePercent;
+  final double absentCount;
+  final double absentPercent;
+
+  AttendanceStatus({
+    required this.onTimeCount,
+    required this.onTimePercent,
+    required this.lateCount,
+    required this.latePercent,
+    required this.leaveCount,
+    required this.leavePercent,
+    required this.absentCount,
+    required this.absentPercent,
+  });
+
+  factory AttendanceStatus.fromJson(Map<String, dynamic> j) => AttendanceStatus(
+        onTimeCount: (j['on_time']['count'] as num).toDouble(),
+        onTimePercent: (j['on_time']['percent'] as num).toDouble(),
+        lateCount: (j['late']['count'] as num).toDouble(),
+        latePercent: (j['late']['percent'] as num).toDouble(),
+        leaveCount: (j['leave']['count'] as num).toDouble(),
+        leavePercent: (j['leave']['percent'] as num).toDouble(),
+        absentCount: (j['absent']['count'] as num).toDouble(),
+        absentPercent: (j['absent']['percent'] as num).toDouble(),
+      );
+}
+
+class GenderDistribution {
+  final int femaleCount;
+  final double femalePercent;
+  final int maleCount;
+  final double malePercent;
+
+  GenderDistribution({
+    required this.femaleCount,
+    required this.femalePercent,
+    required this.maleCount,
+    required this.malePercent,
+  });
+
+  factory GenderDistribution.fromJson(Map<String, dynamic> j) =>
+      GenderDistribution(
+        femaleCount: j['female']['count'],
+        femalePercent: (j['female']['percent'] as num).toDouble(),
+        maleCount: j['male']['count'],
+        malePercent: (j['male']['percent'] as num).toDouble(),
+      );
+}
+
+class StreamsBreakdown {
+  final int scienceCount;
+  final double sciencePercent;
+  final int socialScienceCount;
+  final double socialSciencePercent;
+
+  StreamsBreakdown({
+    required this.scienceCount,
+    required this.sciencePercent,
+    required this.socialScienceCount,
+    required this.socialSciencePercent,
+  });
+
+  factory StreamsBreakdown.fromJson(Map<String, dynamic> j) => StreamsBreakdown(
+        scienceCount: j['science']['count'],
+        sciencePercent: (j['science']['percent'] as num).toDouble(),
+        socialScienceCount: j['social_science']['count'],
+        socialSciencePercent:
+            (j['social_science']['percent'] as num).toDouble(),
+      );
+}
+
+// ---------- APP ----------
 class StudentDashboardApp extends StatelessWidget {
   const StudentDashboardApp({super.key});
 
@@ -32,8 +228,28 @@ class StudentDashboardApp extends StatelessWidget {
   }
 }
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  late Future<SchoolData> _futureData;
+
+  @override
+  void initState() {
+    super.initState();
+    _futureData = SchoolDataService.fetchAll();
+  }
+
+  Future<void> _refresh() async {
+    setState(() {
+      _futureData = SchoolDataService.fetchAll();
+    });
+    await _futureData;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,75 +264,138 @@ class DashboardScreen extends StatelessWidget {
         centerTitle: false,
       ),
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            // Summary cards
-            _SummaryCards(cardColor: cardColor, mutedColor: mutedColor),
-            const SizedBox(height: 24),
+        child: FutureBuilder<SchoolData>(
+          future: _futureData,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.error_outline,
+                          size: 40, color: Colors.red),
+                      const SizedBox(height: 12),
+                      Text(
+                        'ໂຫຼດຂໍ້ມູນບໍ່ສຳເລັດ: ${snapshot.error}',
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 12),
+                      ElevatedButton(
+                        onPressed: _refresh,
+                        child: const Text('ລອງໃໝ່'),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
 
-            // Grade level breakdown
-            _SectionCard(
-              title: 'ແຍກຕາມລະດັບຊັ້ນຮຽນ (ມ.1 - ມ.7)',
-              cardColor: cardColor,
-              child: const _GradeLevelChart(),
-              legend: const [
-                _LegendItem(color: Color(0xFF1BAF7A), label: 'ມາຮຽນປົກກະຕິ'),
-                _LegendItem(color: Color(0xFFE34948), label: 'ຂາດຮຽນ'),
-              ],
-            ),
-            const SizedBox(height: 16),
+            final data = snapshot.data!;
 
-            // Monthly trend
-            _SectionCard(
-              title: 'ແນວໂນ້ມການມາຮຽນລາຍເດືອນ',
-              cardColor: cardColor,
-              child: const _MonthlyTrendChart(),
-            ),
-            const SizedBox(height: 16),
-
-            // Gender distribution
-            _SectionCard(
-              title: 'ແຍກຕາມເພດ',
-              cardColor: cardColor,
-              child: const _GenderPieChart(),
-              legend: const [
-                _LegendItem(color: Color(0xFFE87BA4), label: 'ຍິງ (52.4%)'),
-                _LegendItem(color: Color(0xFF2A78D6), label: 'ຊາຍ (47.6%)'),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Attendance status
-            _SectionCard(
-              title: 'ສະຖານະການມາໂຮງຮຽນ',
-              cardColor: cardColor,
-              child: _HorizontalBarGroup(
-                mutedColor: mutedColor,
-                items: const [
-                  _BarItem('ມາທັນເວລາ', 17884.86, 17884.86, Color(0xFF1BAF7A)),
-                  _BarItem('ມາຊ້າ', 22.64, 17884.86, Color(0xFFEDA100)),
-                  _BarItem('ລາພັກ', 0.34, 17884.86, Color(0xFF4A3AA7)),
-                  _BarItem('ຂາດຮຽນ', 115.82, 17884.86, Color(0xFFE34948)),
+            return RefreshIndicator(
+              onRefresh: _refresh,
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  _SummaryCards(
+                    cardColor: cardColor,
+                    mutedColor: mutedColor,
+                    summary: data.summary,
+                  ),
+                  const SizedBox(height: 24),
+                  _SectionCard(
+                    title: 'ແຍກຕາມລະດັບຊັ້ນຮຽນ (ມ.1 - ມ.7)',
+                    cardColor: cardColor,
+                    child: _GradeLevelChart(data: data.gradeLevelBreakdown),
+                    legend: const [
+                      _LegendItem(
+                          color: Color(0xFF1BAF7A), label: 'ມາຮຽນປົກກະຕິ'),
+                      _LegendItem(color: Color(0xFFE34948), label: 'ຂາດຮຽນ'),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  _SectionCard(
+                    title: 'ແນວໂນ້ມການມາຮຽນລາຍເດືອນ',
+                    cardColor: cardColor,
+                    child:
+                        _MonthlyTrendChart(data: data.monthlyAttendanceTrend),
+                  ),
+                  const SizedBox(height: 16),
+                  _SectionCard(
+                    title: 'ແຍກຕາມເພດ',
+                    cardColor: cardColor,
+                    child: _GenderPieChart(data: data.genderDistribution),
+                    legend: [
+                      _LegendItem(
+                          color: const Color(0xFFE87BA4),
+                          label:
+                              'ຍິງ (${data.genderDistribution.femalePercent.toStringAsFixed(1)}%)'),
+                      _LegendItem(
+                          color: const Color(0xFF2A78D6),
+                          label:
+                              'ຊາຍ (${data.genderDistribution.malePercent.toStringAsFixed(1)}%)'),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  _SectionCard(
+                    title: 'ສະຖານະການມາໂຮງຮຽນ',
+                    cardColor: cardColor,
+                    child: _HorizontalBarGroup(
+                      mutedColor: mutedColor,
+                      items: [
+                        _BarItem(
+                            'ມາທັນເວລາ',
+                            data.attendanceStatus.onTimeCount,
+                            data.attendanceStatus.onTimeCount,
+                            const Color(0xFF1BAF7A)),
+                        _BarItem(
+                            'ມາຊ້າ',
+                            data.attendanceStatus.lateCount,
+                            data.attendanceStatus.onTimeCount,
+                            const Color(0xFFEDA100)),
+                        _BarItem(
+                            'ລາພັກ',
+                            data.attendanceStatus.leaveCount,
+                            data.attendanceStatus.onTimeCount,
+                            const Color(0xFF4A3AA7)),
+                        _BarItem(
+                            'ຂາດຮຽນ',
+                            data.attendanceStatus.absentCount,
+                            data.attendanceStatus.onTimeCount,
+                            const Color(0xFFE34948)),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _SectionCard(
+                    title: 'ສາຍການຮຽນ ມ.ປາຍ',
+                    cardColor: cardColor,
+                    child: _HorizontalBarGroup(
+                      mutedColor: mutedColor,
+                      items: [
+                        _BarItem(
+                            'ວິທະຍາສາດ-ທຳມະຊາດ',
+                            data.streamsBreakdown.scienceCount.toDouble(),
+                            data.streamsBreakdown.scienceCount.toDouble(),
+                            const Color(0xFF1BAF7A)),
+                        _BarItem(
+                            'ວິທະຍາສາດ-ສັງຄົມ',
+                            data.streamsBreakdown.socialScienceCount.toDouble(),
+                            data.streamsBreakdown.scienceCount.toDouble(),
+                            const Color(0xFF2A78D6)),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                 ],
               ),
-            ),
-            const SizedBox(height: 16),
-
-            // Streams
-            _SectionCard(
-              title: 'ສາຍການຮຽນ ມ.ປາຍ',
-              cardColor: cardColor,
-              child: _HorizontalBarGroup(
-                mutedColor: mutedColor,
-                items: const [
-                  _BarItem('ວິທະຍາສາດ-ທຳມະຊາດ', 4500, 4500, Color(0xFF1BAF7A)),
-                  _BarItem('ວິທະຍາສາດ-ສັງຄົມ', 3442, 4500, Color(0xFF2A78D6)),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-          ],
+            );
+          },
         ),
       ),
     );
@@ -128,7 +407,12 @@ class DashboardScreen extends StatelessWidget {
 class _SummaryCards extends StatelessWidget {
   final Color cardColor;
   final Color mutedColor;
-  const _SummaryCards({required this.cardColor, required this.mutedColor});
+  final Summary summary;
+  const _SummaryCards({
+    required this.cardColor,
+    required this.mutedColor,
+    required this.summary,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -138,24 +422,25 @@ class _SummaryCards extends StatelessWidget {
         final cards = [
           _MetricCard(
             label: 'ນັກຮຽນທັງໝົດ',
-            value: '18,122',
-            delta: '+0.02% ຈາກເດືອນກ່ອນ',
+            value: _formatInt(summary.totalStudents),
+            delta:
+                '${summary.changeFromLastMonthPercent >= 0 ? '+' : ''}${summary.changeFromLastMonthPercent}% ຈາກເດືອນກ່ອນ',
             deltaUp: true,
             cardColor: cardColor,
             mutedColor: mutedColor,
           ),
           _MetricCard(
             label: 'ມາຮຽນປົກກະຕິ',
-            value: '17,984',
-            delta: '99.24% ຂອງທັງໝົດ',
+            value: _formatInt(summary.normalCount),
+            delta: '${summary.normalPercent}% ຂອງທັງໝົད',
             deltaUp: false,
             cardColor: cardColor,
             mutedColor: mutedColor,
           ),
           _MetricCard(
             label: 'ຜິດປົກກະຕິ',
-            value: '138',
-            delta: '0.76% ຂອງທັງໝົດ',
+            value: _formatInt(summary.abnormalCount),
+            delta: '${summary.abnormalPercent}% ຂອງທັງໝົດ',
             deltaUp: false,
             cardColor: cardColor,
             mutedColor: mutedColor,
@@ -179,6 +464,16 @@ class _SummaryCards extends StatelessWidget {
         );
       },
     );
+  }
+
+  static String _formatInt(int n) {
+    final s = n.toString();
+    final buf = StringBuffer();
+    for (int i = 0; i < s.length; i++) {
+      if (i > 0 && (s.length - i) % 3 == 0) buf.write(',');
+      buf.write(s[i]);
+    }
+    return buf.toString();
   }
 }
 
@@ -295,28 +590,21 @@ class _LegendItem extends StatelessWidget {
 // ---------- Grade level bar chart ----------
 
 class _GradeLevelChart extends StatelessWidget {
-  const _GradeLevelChart();
-
-  static const grades = ['ມ.1', 'ມ.2', 'ມ.3', 'ມ.4', 'ມ.5', 'ມ.6', 'ມ.7'];
-  static const normal = [
-    2630.0,
-    2565.0,
-    2485.0,
-    2430.0,
-    2575.0,
-    2622.0,
-    2677.0
-  ];
-  static const absent = [20.0, 15.0, 15.0, 20.0, 25.0, 20.0, 23.0];
+  final List<GradeLevel> data;
+  const _GradeLevelChart({required this.data});
 
   @override
   Widget build(BuildContext context) {
+    final maxTotal =
+        data.map((g) => g.total).fold<int>(0, (a, b) => a > b ? a : b);
+    final maxY = ((maxTotal / 500).ceil() + 1) * 500.0;
+
     return SizedBox(
       height: 260,
       child: BarChart(
         BarChartData(
           alignment: BarChartAlignment.spaceAround,
-          maxY: 3000,
+          maxY: maxY,
           gridData: FlGridData(
             drawVerticalLine: false,
             horizontalInterval: 500,
@@ -343,30 +631,31 @@ class _GradeLevelChart extends StatelessWidget {
                 showTitles: true,
                 getTitlesWidget: (v, meta) {
                   final i = v.toInt();
-                  if (i < 0 || i >= grades.length)
+                  if (i < 0 || i >= data.length) {
                     return const SizedBox.shrink();
+                  }
                   return Padding(
                     padding: const EdgeInsets.only(top: 6),
-                    child:
-                        Text(grades[i], style: const TextStyle(fontSize: 12)),
+                    child: Text(data[i].grade,
+                        style: const TextStyle(fontSize: 12)),
                   );
                 },
               ),
             ),
           ),
-          barGroups: List.generate(grades.length, (i) {
+          barGroups: List.generate(data.length, (i) {
             return BarChartGroupData(
               x: i,
               barRods: [
                 BarChartRodData(
-                  toY: normal[i],
+                  toY: data[i].normal.toDouble(),
                   color: const Color(0xFF1BAF7A),
                   width: 12,
                   borderRadius:
                       const BorderRadius.vertical(top: Radius.circular(3)),
                 ),
                 BarChartRodData(
-                  toY: absent[i],
+                  toY: data[i].absent.toDouble(),
                   color: const Color(0xFFE34948),
                   width: 12,
                   borderRadius:
@@ -385,10 +674,8 @@ class _GradeLevelChart extends StatelessWidget {
 // ---------- Monthly trend line chart ----------
 
 class _MonthlyTrendChart extends StatelessWidget {
-  const _MonthlyTrendChart();
-
-  static const months = ['ມັງກອນ', 'ກຸມພາ', 'ມີນາ'];
-  static const rates = [98.5, 99.0, 99.24];
+  final List<MonthlyTrend> data;
+  const _MonthlyTrendChart({required this.data});
 
   @override
   Widget build(BuildContext context) {
@@ -422,12 +709,13 @@ class _MonthlyTrendChart extends StatelessWidget {
                 showTitles: true,
                 getTitlesWidget: (v, meta) {
                   final i = v.toInt();
-                  if (i < 0 || i >= months.length)
+                  if (i < 0 || i >= data.length) {
                     return const SizedBox.shrink();
+                  }
                   return Padding(
                     padding: const EdgeInsets.only(top: 6),
-                    child:
-                        Text(months[i], style: const TextStyle(fontSize: 12)),
+                    child: Text(data[i].month,
+                        style: const TextStyle(fontSize: 12)),
                   );
                 },
               ),
@@ -435,8 +723,8 @@ class _MonthlyTrendChart extends StatelessWidget {
           ),
           lineBarsData: [
             LineChartBarData(
-              spots: List.generate(
-                  rates.length, (i) => FlSpot(i.toDouble(), rates[i])),
+              spots: List.generate(data.length,
+                  (i) => FlSpot(i.toDouble(), data[i].attendancePercent)),
               isCurved: true,
               color: const Color(0xFF2A78D6),
               barWidth: 2,
@@ -454,7 +742,8 @@ class _MonthlyTrendChart extends StatelessWidget {
 // ---------- Gender pie chart ----------
 
 class _GenderPieChart extends StatelessWidget {
-  const _GenderPieChart();
+  final GenderDistribution data;
+  const _GenderPieChart({required this.data});
 
   @override
   Widget build(BuildContext context) {
@@ -466,13 +755,13 @@ class _GenderPieChart extends StatelessWidget {
           centerSpaceRadius: 50,
           sections: [
             PieChartSectionData(
-              value: 9500,
+              value: data.femaleCount.toDouble(),
               color: const Color(0xFFE87BA4),
               title: '',
               radius: 45,
             ),
             PieChartSectionData(
-              value: 8622,
+              value: data.maleCount.toDouble(),
               color: const Color(0xFF2A78D6),
               title: '',
               radius: 45,
