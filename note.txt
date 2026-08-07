@@ -32,3 +32,9 @@
  cd API
  uvicorn server:app --reload
  cd ..
+
+
+ API use:
+- FastAPI
+Database use:
+- Json file
