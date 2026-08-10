@@ -3,16 +3,23 @@ import importlib
 import os
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
+import os
 load_dotenv()
 
-app = FastAPI(title="FastAPI Back-end System")
+app = FastAPI()
+
+origins = [o.strip() for o in os.getenv("CORS_ORIGIN", "").split(",") if o.strip()]
+if not origins:
+    origins = ["*"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins, 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"]
 )
+
+print("CORS ORIGINS LOADED:", origins)
 
 ROUTER_DIR = "router"
 if os.path.exists(ROUTER_DIR):

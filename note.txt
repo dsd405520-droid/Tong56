@@ -29,9 +29,14 @@
  ສາຍວິທະຍາສາດ-ທຳມະຊາດ (Science): 4,500 ຄົນ (ໃກ້ຄຽງ 56.5%)
  ສາຍວິທະຍາສາດ-ສັງຄົມ (Social Science): 3,442 ຄົນ (ໃກ້ຄຽງ 43.5%)
 
- cd API
- uvicorn server:app --reload
- cd ..
+
+how to run API:
+- cd API
+- uvicorn server:app --reload
+- cd ..
+
+how to run Flutter:
+- flutter run -d chrome --web-port=5000
 
 
  API use:
