@@ -32,7 +32,7 @@
 
 how to run API:
 - cd API
-- uvicorn server:app --reload
+- python -m uvicorn server:app --reload
 - cd ..
 
 how to run Flutter:

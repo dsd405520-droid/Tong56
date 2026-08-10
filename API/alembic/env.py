@@ -13,7 +13,8 @@ from dotenv import load_dotenv
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from database import Base
-import db_models as db_models  # noqa: F401  (import so Base.metadata knows about all your tables)
+import models.db_models as db_models  # noqa: F401  (import so Base.metadata knows about all your tables)
+import models.auth_models as auth_models
 
 load_dotenv()
 
