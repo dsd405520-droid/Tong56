@@ -10,11 +10,10 @@ import os
 import sys
 from dotenv import load_dotenv
 
-# Make sure Python can find your models.py and database.py
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from database import Base
-import models  # noqa: F401  (import so Base.metadata knows about all your tables)
+import db_models as db_models  # noqa: F401  (import so Base.metadata knows about all your tables)
 
 load_dotenv()
 
