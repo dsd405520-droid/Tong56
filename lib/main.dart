@@ -416,53 +416,42 @@ class _SummaryCards extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isNarrow = constraints.maxWidth < 480;
-        final cards = [
-          _MetricCard(
-            label: 'ນັກຮຽນທັງໝົດ',
-            value: _formatInt(summary.totalStudents),
-            delta:
-                '${summary.changeFromLastMonthPercent >= 0 ? '+' : ''}${summary.changeFromLastMonthPercent}% ຈາກເດືອນກ່ອນ',
-            deltaUp: true,
-            cardColor: cardColor,
-            mutedColor: mutedColor,
-          ),
-          _MetricCard(
-            label: 'ມາຮຽນປົກກະຕິ',
-            value: _formatInt(summary.normalCount),
-            delta: '${summary.normalPercent}% ຂອງທັງໝົད',
-            deltaUp: false,
-            cardColor: cardColor,
-            mutedColor: mutedColor,
-          ),
-          _MetricCard(
-            label: 'ຜິດປົກກະຕິ',
-            value: _formatInt(summary.abnormalCount),
-            delta: '${summary.abnormalPercent}% ຂອງທັງໝົດ',
-            deltaUp: false,
-            cardColor: cardColor,
-            mutedColor: mutedColor,
-          ),
-        ];
+    final cards = [
+      _MetricCard(
+        label: 'ນັກຮຽນທັງໝົດ',
+        value: _formatInt(summary.totalStudents),
+        delta:
+            '${summary.changeFromLastMonthPercent >= 0 ? '+' : ''}${summary.changeFromLastMonthPercent}% ຈາກເດືອນກ່ອນ',
+        deltaUp: true,
+        cardColor: cardColor,
+        mutedColor: mutedColor,
+      ),
+      _MetricCard(
+        label: 'ມາຮຽນປົກກະຕິ',
+        value: _formatInt(summary.normalCount),
+        delta: '${summary.normalPercent}% ຂອງທັງໝົດ',
+        deltaUp: false,
+        cardColor: cardColor,
+        mutedColor: mutedColor,
+      ),
+      _MetricCard(
+        label: 'ຜິດປົກກະຕິ',
+        value: _formatInt(summary.abnormalCount),
+        delta: '${summary.abnormalPercent}% ຂອງທັງໝົດ',
+        deltaUp: false,
+        cardColor: cardColor,
+        mutedColor: mutedColor,
+      ),
+    ];
 
-        if (isNarrow) {
-          return Column(
-            children: [
-              for (final c in cards) ...[c, const SizedBox(height: 12)],
-            ],
-          );
-        }
-        return Row(
-          children: [
-            for (final c in cards) ...[
-              Expanded(child: c),
-              if (c != cards.last) const SizedBox(width: 12),
-            ],
-          ],
-        );
-      },
+    // ບັງຄັບໃຫ້ຈັດລຽນເປັນແຖວແນວນອນ (Row) ສະເໝີ
+    return Row(
+      children: [
+        for (final c in cards) ...[
+          Expanded(child: c),
+          if (c != cards.last) const SizedBox(width: 8),
+        ],
+      ],
     );
   }
 
@@ -497,7 +486,8 @@ class _MetricCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding:
+          const EdgeInsets.all(12), // ຫຼຸດ padding ລົງເລັກນອນເພື່ອໃຫ້ພໍດີແນວນອນ
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: BorderRadius.circular(10),
@@ -505,16 +495,18 @@ class _MetricCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: TextStyle(fontSize: 13, color: mutedColor)),
+          Text(label, style: TextStyle(fontSize: 11, color: mutedColor)),
           const SizedBox(height: 4),
           Text(value,
-              style:
-                  const TextStyle(fontSize: 24, fontWeight: FontWeight.w500)),
+              style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight:
+                      FontWeight.w500)), // ປັບຂະໜາດຕົວອັກສອນໃຫ້ເໝາະກັບແນວນອນ
           const SizedBox(height: 4),
           Text(
             delta,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: 10,
               color: deltaUp ? const Color(0xFF1BAF7A) : mutedColor,
             ),
           ),
