@@ -1,3 +1,10 @@
+"""
+Database engine and session setup.
+
+Import `get_db` in your route/controller functions to get a DB session,
+and `Base` in db_models.py so Alembic can detect your tables.
+"""
+
 import os
 from dotenv import load_dotenv
 from sqlalchemy import create_engine

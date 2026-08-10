@@ -1,30 +1,24 @@
 """
-Seed the database using the numbers already in school_data.json.
+Load school_data.json directly into the database as one Snapshot.
 
-v2: batches inserts instead of flushing per-row (the original version did
-one network round-trip per student, which for ~18k students took forever
-and looked "stuck"). This version builds rows in memory and flushes once
-per grade instead of once per student.
-
-Also adds --sample so you can seed a smaller, fast dataset for local
-dev/testing instead of the full ~18,000 students every time.
+No fake students, no random generation -- just takes the numbers already
+in the JSON and stores them relationally. Runs instantly since it's only
+inserting ~11 rows total (1 snapshot + 7 grades + 3 months + 3 single rows).
 
 Usage:
-    python seed.py                  # full dataset (~18k students)
-    python seed.py --sample 0.05    # seed ~5% of each grade, fast, for quick dev testing
+    python seed.py
 """
 
-import argparse
 import json
-import random
-from datetime import date
 from pathlib import Path
 
 from database import SessionLocal
-from db_models import Grade, Stream, Student, AttendanceRecord
+from models.db_models import (
+    Snapshot, GradeLevelBreakdown, MonthlyAttendanceTrend,
+    AttendanceStatus, GenderDistribution, StreamsBreakdown
+)
 
 JSON_PATH = Path("school_data.json")
-STREAM_START_GRADE = "ມ.4"
 
 
 def load_json():
@@ -32,81 +26,73 @@ def load_json():
         return json.load(f)
 
 
-def main(sample_fraction: float):
+def main():
     data = load_json()
     db = SessionLocal()
 
     try:
-        # ---- 1. Create streams ----
-        stream_names = list(data["streams_breakdown"].keys())
-        streams = {}
-        for name in stream_names:
-            existing = db.query(Stream).filter_by(name=name).first()
-            if not existing:
-                existing = Stream(name=name)
-                db.add(existing)
-                db.flush()
-            streams[name] = existing
+        summary = data["summary"]
+        snapshot = Snapshot(
+            total_students=summary["total_students"],
+            change_from_last_month_percent=summary["change_from_last_month_percent"],
+            normal_attendance_count=summary["normal_attendance"]["count"],
+            normal_attendance_percent=summary["normal_attendance"]["percent"],
+            abnormal_attendance_count=summary["abnormal_attendance"]["count"],
+            abnormal_attendance_percent=summary["abnormal_attendance"]["percent"],
+        )
+        db.add(snapshot)
+        db.flush()  # get snapshot.id
 
-        female_ratio = data["gender_distribution"]["female"]["percent"] / 100
-        grade_rows = data["grade_level_breakdown"]
-        today = date.today()
+        for row in data["grade_level_breakdown"]:
+            db.add(GradeLevelBreakdown(
+                snapshot_id=snapshot.id,
+                grade=row["grade"],
+                total=row["total"],
+                normal=row["normal"],
+                absent=row["absent"],
+            ))
 
-        total_students = 0
-        total_records = 0
-        stream_started = False
+        for row in data["monthly_attendance_trend"]:
+            db.add(MonthlyAttendanceTrend(
+                snapshot_id=snapshot.id,
+                month=row["month"],
+                attendance_percent=row["attendance_percent"],
+                absent_percent=row["absent_percent"],
+            ))
 
-        for row in grade_rows:
-            grade_name = row["grade"]
-            total = max(1, round(row["total"] * sample_fraction))
-            absent = max(0, round(row["absent"] * sample_fraction))
-            absent = min(absent, total)  # never exceed total after rounding
+        status = data["attendance_status"]
+        db.add(AttendanceStatus(
+            snapshot_id=snapshot.id,
+            on_time_count=status["on_time"]["count"],
+            on_time_percent=status["on_time"]["percent"],
+            late_count=status["late"]["count"],
+            late_percent=status["late"]["percent"],
+            leave_count=status["leave"]["count"],
+            leave_percent=status["leave"]["percent"],
+            absent_count=status["absent"]["count"],
+            absent_percent=status["absent"]["percent"],
+        ))
 
-            grade = db.query(Grade).filter_by(name=grade_name).first()
-            if not grade:
-                grade = Grade(name=grade_name)
-                db.add(grade)
-                db.flush()
+        gender = data["gender_distribution"]
+        db.add(GenderDistribution(
+            snapshot_id=snapshot.id,
+            female_count=gender["female"]["count"],
+            female_percent=gender["female"]["percent"],
+            male_count=gender["male"]["count"],
+            male_percent=gender["male"]["percent"],
+        ))
 
-            if grade_name == STREAM_START_GRADE:
-                stream_started = True
-
-            absent_indexes = set(random.sample(range(total), absent)) if absent > 0 else set()
-
-            # Build all Student objects for this grade in memory first
-            students_batch = []
-            for i in range(total):
-                gender = "female" if random.random() < female_ratio else "male"
-                stream = random.choice(list(streams.values())) if stream_started else None
-                students_batch.append(Student(
-                    full_name=f"Student {grade_name} #{i + 1}",
-                    gender=gender,
-                    grade_id=grade.id,
-                    stream_id=stream.id if stream else None,
-                ))
-
-            # Bulk insert this grade's students in one round-trip, then get their IDs back
-            db.add_all(students_batch)
-            db.flush()
-
-            # Now build attendance records using the IDs we just got
-            records_batch = []
-            for i, student in enumerate(students_batch):
-                status = "absent" if i in absent_indexes else "on_time"
-                records_batch.append(AttendanceRecord(
-                    student_id=student.id,
-                    date=today,
-                    status=status,
-                ))
-            db.add_all(records_batch)
-
-            total_students += len(students_batch)
-            total_records += len(records_batch)
-            print(f"  {grade_name}: {len(students_batch)} students queued")
+        streams = data["streams_breakdown"]
+        db.add(StreamsBreakdown(
+            snapshot_id=snapshot.id,
+            science_count=streams["science"]["count"],
+            science_percent=streams["science"]["percent"],
+            social_science_count=streams["social_science"]["count"],
+            social_science_percent=streams["social_science"]["percent"],
+        ))
 
         db.commit()
-        print(f"✅ Seeded {total_students} students and {total_records} attendance records "
-              f"for {today.isoformat()} (sample_fraction={sample_fraction}).")
+        print(f"✅ Seeded snapshot id={snapshot.id} with all breakdown tables.")
 
     except Exception as e:
         db.rollback()
@@ -117,10 +103,4 @@ def main(sample_fraction: float):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--sample", type=float, default=1.0,
-        help="Fraction of each grade's students to seed, e.g. 0.05 for 5%%. Default 1.0 = full dataset."
-    )
-    args = parser.parse_args()
-    main(args.sample)
+    main()
