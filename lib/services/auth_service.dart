@@ -9,17 +9,20 @@ class ApiConfig {
 class AuthUser {
   final int id;
   final String email;
+  final bool isAdmin;
 
-  AuthUser({required this.id, required this.email});
+  AuthUser({required this.id, required this.email, required this.isAdmin});
 
   factory AuthUser.fromJson(Map<String, dynamic> j) => AuthUser(
         id: j['id'],
         email: j['email'],
+        isAdmin: j['is_admin'] ?? false,
       );
 }
 
 class AuthService {
   static const _tokenKey = 'auth_token';
+  static const _isAdminKey = 'is_admin';
 
   /// Pulls a readable message out of a FastAPI error body, whether
   /// `detail` is a plain string (e.g. HTTPException(detail="...")) or
@@ -62,6 +65,7 @@ class AuthService {
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_tokenKey, token);
+    await prefs.setBool(_isAdminKey, user.isAdmin);
 
     return user;
   }
@@ -131,11 +135,17 @@ class AuthService {
   static Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_tokenKey);
+    await prefs.remove(_isAdminKey);
   }
 
   static Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_tokenKey);
+  }
+
+  static Future<bool> isAdmin() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_isAdminKey) ?? false;
   }
 
   static Future<bool> isLoggedIn() async {

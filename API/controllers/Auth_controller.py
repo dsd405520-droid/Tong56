@@ -68,6 +68,7 @@ async def signup(payload: SignupRequest, db: Session = Depends(get_db)):
         email=payload.email,
         hashed_password=hash_password(payload.password),
         is_verified=False,
+        is_admin=False,
     )
     db.add(user)
     db.commit()
@@ -114,7 +115,7 @@ async def login(payload: LoginRequest, db: Session = Depends(get_db)):
     return TokenResponse(
         access_token=token,
         expires_in_minutes=JWT_EXPIRE_MINUTES,
-        user=UserOut(id=user.id, email=user.email),
+        user=UserOut(id=user.id, email=user.email, is_admin=user.is_admin),
     )
 
 

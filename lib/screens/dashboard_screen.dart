@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../models/school_data.dart';
 import '../services/school_data_service.dart';
 import '../widgets/dashboard_widgets.dart';
+import '../services/auth_service.dart';
+import '../pages/login_page.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -13,11 +15,30 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   late Future<SchoolData> _futureData;
+  bool _isAdmin = false;
 
   @override
   void initState() {
     super.initState();
     _futureData = SchoolDataService.fetchAll();
+    _loadAdminStatus();
+  }
+
+  Future<void> _loadAdminStatus() async {
+    final isAdmin = await AuthService.isAdmin();
+    if (mounted)
+      setState(() {
+        _isAdmin = isAdmin;
+      });
+  }
+
+  Future<void> _logout() async {
+    await AuthService.logout();
+    if (!mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginPage()),
+      (route) => false,
+    );
   }
 
   Future<void> _refresh() async {
@@ -38,6 +59,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
       appBar: AppBar(
         title: const Text('ສະຖິຕິນັກຮຽນ ມ.1 - ມ.7'),
         centerTitle: false,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: Center(
+              child: Chip(
+                avatar: Icon(
+                  _isAdmin ? Icons.verified_user : Icons.person_outline,
+                  size: 16,
+                  color: _isAdmin ? Colors.white : null,
+                ),
+                label: Text(_isAdmin ? 'Admin' : 'User'),
+                backgroundColor: _isAdmin ? const Color(0xFF2A78D6) : null,
+                labelStyle: TextStyle(color: _isAdmin ? Colors.white : null),
+              ),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'ອອກຈາກລະບົບ',
+            onPressed: _logout,
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: SafeArea(
         child: FutureBuilder<SchoolData>(

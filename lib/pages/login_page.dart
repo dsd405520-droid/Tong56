@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:student_dashboard/pages/MainPageStat.dart';
+import 'package:student_dashboard/screens/dashboard_screen.dart';
 import '../services/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
@@ -41,8 +41,6 @@ class _LoginPageState extends State<LoginPage> {
 
       if (!mounted) return;
 
-      // Login successful — replace this page with the dashboard so the
-      // user can't hit "back" and land on the login screen again.
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const DashboardScreen()),
       );

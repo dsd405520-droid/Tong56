@@ -19,6 +19,7 @@ class LoginRequest(BaseModel):
 class UserOut(BaseModel):
     id: int
     email: EmailStr
+    is_admin: bool
 
 
 class TokenResponse(BaseModel):
