@@ -7,7 +7,7 @@ from sqlalchemy import desc
 from database import get_db
 from models.auth_models import User, VerificationCode, CodePurpose
 from models.auth_schema import (
-    SignupRequest, VerifyEmailRequest, LoginRequest, TokenResponse,
+    SignupRequest, VerifyEmailRequest, LoginRequest, TokenResponse, UserOut,
     ForgotPasswordRequest, ResetPasswordRequest, MessageResponse
 )
 from utils.auth_utils import hash_password, verify_password, create_access_token
@@ -111,7 +111,11 @@ async def login(payload: LoginRequest, db: Session = Depends(get_db)):
     from utils.auth_utils import JWT_EXPIRE_MINUTES
     token = create_access_token(user_id=user.id, email=user.email)
 
-    return TokenResponse(access_token=token, expires_in_minutes=JWT_EXPIRE_MINUTES)
+    return TokenResponse(
+        access_token=token,
+        expires_in_minutes=JWT_EXPIRE_MINUTES,
+        user=UserOut(id=user.id, email=user.email),
+    )
 
 
 # ---------- Forgot / reset password ----------

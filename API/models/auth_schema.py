@@ -16,10 +16,16 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class UserOut(BaseModel):
+    id: int
+    email: EmailStr
+
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     expires_in_minutes: int
+    user: UserOut
 
 
 class ForgotPasswordRequest(BaseModel):

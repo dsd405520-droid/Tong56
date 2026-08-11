@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:student_dashboard/pages/MainPageStat.dart';
 import '../services/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
@@ -33,15 +34,18 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      final user = await AuthService.login(
+      await AuthService.login(
         _emailController.text.trim(),
         _passwordController.text,
       );
 
       if (!mounted) return;
 
-      // Login successful — return the logged-in user to whoever pushed this page.
-      Navigator.of(context).pop(user);
+      // Login successful — replace this page with the dashboard so the
+      // user can't hit "back" and land on the login screen again.
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const DashboardScreen()),
+      );
     } catch (e) {
       setState(() {
         _errorMessage = e.toString().replaceFirst('Exception: ', '');
