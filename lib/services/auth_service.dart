@@ -3,8 +3,6 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiConfig {
-  // Same base host as your existing SchoolDataService — keep these in sync.
-  // When you deploy the backend for real, update both to the new URL.
   static const String baseUrl = 'http://127.0.0.1:8000';
 }
 
