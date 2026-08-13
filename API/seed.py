@@ -41,7 +41,7 @@ def main():
             abnormal_attendance_percent=summary["abnormal_attendance"]["percent"],
         )
         db.add(snapshot)
-        db.flush()  # get snapshot.id
+        db.flush() 
 
         for row in data["grade_level_breakdown"]:
             db.add(GradeLevelBreakdown(
@@ -92,11 +92,11 @@ def main():
         ))
 
         db.commit()
-        print(f"✅ Seeded snapshot id={snapshot.id} with all breakdown tables.")
+        print(f"Seeded snapshot id={snapshot.id} with all breakdown tables.")
 
     except Exception as e:
         db.rollback()
-        print(f"❌ Seeding failed, rolled back: {e}")
+        print(f"Seeding failed, rolled back: {e}")
         raise
     finally:
         db.close()

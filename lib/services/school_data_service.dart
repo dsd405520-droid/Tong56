@@ -6,7 +6,7 @@ import '../models/school_data.dart';
 
 class SchoolDataService {
   static Future<SchoolData> fetchAll() async {
-    final res = await http.get(Uri.parse('${ApiConfig.baseUrl}/all'));
+    final res = await http.get(Uri.parse('${ApiConfig.schoolDataBaseUrl}/all'));
     if (res.statusCode != 200) {
       throw Exception('Failed to load school data (${res.statusCode})');
     }

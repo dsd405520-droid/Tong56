@@ -28,7 +28,6 @@ CODE_EXPIRE_MINUTES = 15
 
 
 def generate_code() -> str:
-    """Random 6-digit numeric code, e.g. '042817'."""
     return f"{secrets.randbelow(1_000_000):06d}"
 
 
@@ -37,11 +36,6 @@ def hash_code(code: str) -> str:
 
 
 def send_email(to_email: str, subject: str, body: str) -> None:
-    """
-    Sends a plain-text email via SMTP. If SMTP isn't configured (no .env
-    values set), falls back to printing the email to the console -- handy
-    for local dev/testing without needing real email credentials yet.
-    """
     if not SMTP_HOST or not SMTP_USER or not SMTP_PASSWORD:
         print("=" * 60)
         print("SMTP not configured -- printing email instead of sending:")

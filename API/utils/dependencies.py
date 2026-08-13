@@ -1,14 +1,3 @@
-"""
-Optional: use this to protect other endpoints behind a valid JWT.
-
-Example usage in another controller:
-
-    from utils.dependencies import get_current_user
-
-    async def some_protected_route(current_user: User = Depends(get_current_user)):
-        return {"hello": current_user.email}
-"""
-
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session

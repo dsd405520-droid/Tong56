@@ -1,12 +1,3 @@
-"""
-Password hashing (bcrypt) and JWT creation/verification.
-
-Reads config from environment variables (set these in .env):
-  JWT_SECRET_KEY       - required, long random string
-  JWT_ALGORITHM        - optional, defaults to HS256
-  JWT_EXPIRE_MINUTES   - optional, defaults to 60
-"""
-
 import os
 from datetime import datetime, timedelta, timezone
 

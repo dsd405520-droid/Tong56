@@ -24,9 +24,6 @@ class AuthService {
   static const _tokenKey = 'auth_token';
   static const _isAdminKey = 'is_admin';
 
-  /// Pulls a readable message out of a FastAPI error body, whether
-  /// `detail` is a plain string (e.g. HTTPException(detail="...")) or
-  /// a nested object/list (e.g. Pydantic validation errors).
   static String _extractErrorMessage(dynamic body, int statusCode) {
     final detail = body is Map ? body['detail'] : null;
 
@@ -46,7 +43,6 @@ class AuthService {
     return 'Request failed ($statusCode)';
   }
 
-  /// Calls POST /auth/login. Throws an Exception with a readable message on failure.
   static Future<AuthUser> login(String email, String password) async {
     final res = await http.post(
       Uri.parse('${ApiConfig.baseUrl}/auth/login'),
@@ -70,7 +66,6 @@ class AuthService {
     return user;
   }
 
-  /// Calls POST /auth/signup. Throws an Exception with a readable message on failure.
   static Future<void> signup(String email, String password) async {
     final res = await http.post(
       Uri.parse('${ApiConfig.baseUrl}/auth/signup'),
@@ -85,7 +80,6 @@ class AuthService {
     }
   }
 
-  /// Calls POST /auth/verify-email. Throws an Exception with a readable message on failure.
   static Future<void> verifyEmail(String email, String code) async {
     final res = await http.post(
       Uri.parse('${ApiConfig.baseUrl}/auth/verify-email'),
@@ -100,7 +94,6 @@ class AuthService {
     }
   }
 
-  /// Calls POST /auth/forgot-password.
   static Future<void> forgotPassword(String email) async {
     final res = await http.post(
       Uri.parse('${ApiConfig.baseUrl}/auth/forgot-password'),
@@ -115,7 +108,6 @@ class AuthService {
     }
   }
 
-  /// Calls POST /auth/reset-password.
   static Future<void> resetPassword(
       String email, String code, String newPassword) async {
     final res = await http.post(
@@ -153,8 +145,6 @@ class AuthService {
     return token != null && token.isNotEmpty;
   }
 
-  /// Convenience header map to attach to authenticated requests, e.g.:
-  /// http.put(uri, headers: await AuthService.authHeaders(), ...)
   static Future<Map<String, String>> authHeaders() async {
     final token = await getToken();
     return {
