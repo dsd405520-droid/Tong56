@@ -19,6 +19,11 @@ def _latest_snapshot(db: Session) -> Snapshot:
     return snapshot
 
 
+def _pct(part: float, total: float) -> float:
+    """Safe percent helper -- avoids ZeroDivisionError on an empty snapshot."""
+    return round(part / total * 100, 2) if total else 0.0
+
+
 def _serialize_summary(snapshot: Snapshot) -> dict:
     return {
         "total_students": snapshot.total_students,
@@ -36,38 +41,48 @@ def _serialize_summary(snapshot: Snapshot) -> dict:
 
 def _serialize_grade_levels(rows: list[GradeLevelBreakdown]) -> list[dict]:
     return [
-        {"grade": r.grade, "total": r.total, "normal": r.normal, "absent": r.absent}
+        {"grade": r.grade, "total": r.total, "normal": r.normal, "absent": r.total - r.normal}
         for r in rows
     ]
 
 
 def _serialize_monthly_trend(rows: list[MonthlyAttendanceTrend]) -> list[dict]:
     return [
-        {"month": r.month, "attendance_percent": r.attendance_percent, "absent_percent": r.absent_percent}
+        {
+            "month": r.month,
+            "attendance_percent": r.attendance_percent,
+            "absent_percent": round(100 - r.attendance_percent, 2),
+        }
         for r in rows
     ]
 
 
 def _serialize_attendance_status(row: AttendanceStatus) -> dict:
+    total = row.on_time_count + row.late_count + row.leave_count + row.absent_count
     return {
-        "on_time": {"count": row.on_time_count, "percent": row.on_time_percent},
-        "late": {"count": row.late_count, "percent": row.late_percent},
-        "leave": {"count": row.leave_count, "percent": row.leave_percent},
-        "absent": {"count": row.absent_count, "percent": row.absent_percent},
+        "on_time": {"count": row.on_time_count, "percent": _pct(row.on_time_count, total)},
+        "late": {"count": row.late_count, "percent": _pct(row.late_count, total)},
+        "leave": {"count": row.leave_count, "percent": _pct(row.leave_count, total)},
+        "absent": {"count": row.absent_count, "percent": _pct(row.absent_count, total)},
     }
 
 
 def _serialize_gender_distribution(row: GenderDistribution) -> dict:
+    total = row.female_count + row.male_count
     return {
-        "female": {"count": row.female_count, "percent": row.female_percent},
-        "male": {"count": row.male_count, "percent": row.male_percent},
+        "female": {"count": row.female_count, "percent": _pct(row.female_count, total)},
+        "male": {"count": row.male_count, "percent": _pct(row.male_count, total)},
     }
 
 
 def _serialize_streams_breakdown(row: StreamsBreakdown) -> dict:
+    total = row.science_count + row.social_science_count
     return {
-        "science": {"count": row.science_count, "percent": row.science_percent},
-        "social_science": {"count": row.social_science_count, "percent": row.social_science_percent},
+        "science": {"count": row.science_count, "percent": _pct(row.science_count, total)},
+        "social_science": {
+            "count": row.social_science_count,
+            "percent": _pct(row.social_science_count, total),
+        },
     }
 
 
@@ -97,7 +112,7 @@ async def get_grade_level_by_name(grade: str, db: Session = Depends(get_db)):
     snapshot = _latest_snapshot(db)
     for row in snapshot.grade_levels:
         if row.grade == grade:
-            return {"grade": row.grade, "total": row.total, "normal": row.normal, "absent": row.absent}
+            return {"grade": row.grade, "total": row.total, "normal": row.normal, "absent": row.total - row.normal}
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Grade not found")
 
 
@@ -123,10 +138,13 @@ async def get_streams_breakdown(db: Session = Depends(get_db)):
 
 async def update_school_data(new_data: dict, db: Session = Depends(get_db)):
     """
-    Create a NEW snapshot with the given data (expects same shape as
-    SchoolDataResponse in schema.py). Unlike the old JSON version, this
-    does not overwrite history -- each update adds a new snapshot, so you
-    keep a full timeline of past stats.
+    Create a NEW snapshot with the given data. Unlike the old JSON version,
+    this does not overwrite history -- each update adds a new snapshot, so
+    you keep a full timeline of past stats.
+
+    Only raw counts need to be supplied -- percent/absent fields are
+    derived automatically on read and are ignored here even if present
+    in the payload.
     """
     try:
         summary = new_data["summary"]
@@ -145,7 +163,7 @@ async def update_school_data(new_data: dict, db: Session = Depends(get_db)):
             db.add(GradeLevelBreakdown(
                 snapshot_id=snapshot.id,
                 grade=row["grade"], total=row["total"],
-                normal=row["normal"], absent=row["absent"],
+                normal=row["normal"],
             ))
 
         for row in new_data["monthly_attendance_trend"]:
@@ -153,31 +171,29 @@ async def update_school_data(new_data: dict, db: Session = Depends(get_db)):
                 snapshot_id=snapshot.id,
                 month=row["month"],
                 attendance_percent=row["attendance_percent"],
-                absent_percent=row["absent_percent"],
             ))
 
         status_data = new_data["attendance_status"]
         db.add(AttendanceStatus(
             snapshot_id=snapshot.id,
-            on_time_count=status_data["on_time"]["count"], on_time_percent=status_data["on_time"]["percent"],
-            late_count=status_data["late"]["count"], late_percent=status_data["late"]["percent"],
-            leave_count=status_data["leave"]["count"], leave_percent=status_data["leave"]["percent"],
-            absent_count=status_data["absent"]["count"], absent_percent=status_data["absent"]["percent"],
+            on_time_count=status_data["on_time"]["count"],
+            late_count=status_data["late"]["count"],
+            leave_count=status_data["leave"]["count"],
+            absent_count=status_data["absent"]["count"],
         ))
 
         gender = new_data["gender_distribution"]
         db.add(GenderDistribution(
             snapshot_id=snapshot.id,
-            female_count=gender["female"]["count"], female_percent=gender["female"]["percent"],
-            male_count=gender["male"]["count"], male_percent=gender["male"]["percent"],
+            female_count=gender["female"]["count"],
+            male_count=gender["male"]["count"],
         ))
 
         streams = new_data["streams_breakdown"]
         db.add(StreamsBreakdown(
             snapshot_id=snapshot.id,
-            science_count=streams["science"]["count"], science_percent=streams["science"]["percent"],
+            science_count=streams["science"]["count"],
             social_science_count=streams["social_science"]["count"],
-            social_science_percent=streams["social_science"]["percent"],
         ))
 
         db.commit()

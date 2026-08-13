@@ -12,55 +12,31 @@
         }
     },
     "grade_level_breakdown": [
-        { "grade": "ມ.1", "total": 2650, "normal": 2630, "absent": 20 },
-        { "grade": "ມ.2", "total": 2580, "normal": 2565, "absent": 15 },
-        { "grade": "ມ.3", "total": 2500, "normal": 2485, "absent": 15 },
-        { "grade": "ມ.4", "total": 2450, "normal": 2430, "absent": 20 },
-        { "grade": "ມ.5", "total": 2600, "normal": 2575, "absent": 25 },
-        { "grade": "ມ.6", "total": 2642, "normal": 2622, "absent": 20 },
-        { "grade": "ມ.7", "total": 2700, "normal": 2677, "absent": 23 }
+        { "grade": "ມ.1", "total": 2650, "normal": 2630 },
+        { "grade": "ມ.2", "total": 2580, "normal": 2565 },
+        { "grade": "ມ.3", "total": 2500, "normal": 2485 },
+        { "grade": "ມ.4", "total": 2450, "normal": 2430 },
+        { "grade": "ມ.5", "total": 2600, "normal": 2575 },
+        { "grade": "ມ.6", "total": 2642, "normal": 2622 },
+        { "grade": "ມ.7", "total": 2700, "normal": 2677 }
     ],
     "monthly_attendance_trend": [
-        { "month": "ມັງກອນ", "attendance_percent": 98.5, "absent_percent": 1.5 },
-        { "month": "ກຸມພາ", "attendance_percent": 99.0, "absent_percent": 1.0 },
-        { "month": "ມີນາ", "attendance_percent": 99.24, "absent_percent": 0.76 }
+        { "month": "ມັງກອນ", "attendance_percent": 98.5 },
+        { "month": "ກຸມພາ", "attendance_percent": 99.0 },
+        { "month": "ມີນາ", "attendance_percent": 99.24 }
     ],
     "attendance_status": {
-        "on_time": {
-            "count": 17884.86,
-            "percent": 99.24
-        },
-        "late": {
-            "count": 22.64,
-            "percent": 0.12
-        },
-        "leave": {
-            "count": 0.34,
-            "percent": 0.00
-        },
-        "absent": {
-            "count": 115.82,
-            "percent": 0.63
-        }
+        "on_time": { "count": 17884.86 },
+        "late": { "count": 22.64 },
+        "leave": { "count": 0.34 },
+        "absent": { "count": 115.82 }
     },
     "gender_distribution": {
-        "female": {
-            "count": 9500,
-            "percent": 52.4
-        },
-        "male": {
-            "count": 8622,
-            "percent": 47.6
-        }
+        "female": { "count": 9500 },
+        "male": { "count": 8622 }
     },
     "streams_breakdown": {
-        "science": {
-            "count": 4500,
-            "percent": 56.5
-        },
-        "social_science": {
-            "count": 3442,
-            "percent": 43.5
-        }
+        "science": { "count": 4500 },
+        "social_science": { "count": 3442 }
     }
 }

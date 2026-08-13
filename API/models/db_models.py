@@ -1,23 +1,3 @@
-"""
-SQLAlchemy models for the school attendance dashboard.
-
-This stores AGGREGATE statistics (matching school_data.json's shape),
-not individual student records. Each time you record/update the stats,
-you create one new `Snapshot` row, and all the breakdown tables link
-back to it by foreign key -- so you keep a history over time instead
-of overwriting a single JSON file, and get real relational integrity
-(foreign keys, indexes) without fabricating fake students.
-
-Tables:
-  snapshots                - one row per time the stats were recorded, plus
-                              the top-level "summary" numbers
-  grade_level_breakdown    - many rows per snapshot (one per grade: ມ.1..ມ.7)
-  monthly_attendance_trend - many rows per snapshot (one per month)
-  attendance_status        - one row per snapshot (on_time/late/leave/absent)
-  gender_distribution      - one row per snapshot (female/male)
-  streams_breakdown        - one row per snapshot (science/social_science)
-"""
-
 from sqlalchemy import (
     Column, Integer, String, Float, ForeignKey, TIMESTAMP, func
 )
@@ -62,10 +42,9 @@ class GradeLevelBreakdown(Base):
     id = Column(Integer, primary_key=True)
     snapshot_id = Column(Integer, ForeignKey("snapshots.id", ondelete="CASCADE"), nullable=False, index=True)
 
-    grade = Column(String(10), nullable=False)   # e.g. 'ມ.1'
+    grade = Column(String(10), nullable=False)   
     total = Column(Integer, nullable=False)
     normal = Column(Integer, nullable=False)
-    absent = Column(Integer, nullable=False)
 
     snapshot = relationship("Snapshot", back_populates="grade_levels")
 
@@ -78,8 +57,7 @@ class MonthlyAttendanceTrend(Base):
 
     month = Column(String(20), nullable=False)
     attendance_percent = Column(Float, nullable=False)
-    absent_percent = Column(Float, nullable=False)
-
+ 
     snapshot = relationship("Snapshot", back_populates="monthly_trends")
 
 
@@ -92,13 +70,10 @@ class AttendanceStatus(Base):
     )
 
     on_time_count = Column(Float, nullable=False)
-    on_time_percent = Column(Float, nullable=False)
     late_count = Column(Float, nullable=False)
-    late_percent = Column(Float, nullable=False)
     leave_count = Column(Float, nullable=False)
-    leave_percent = Column(Float, nullable=False)
     absent_count = Column(Float, nullable=False)
-    absent_percent = Column(Float, nullable=False)
+
 
     snapshot = relationship("Snapshot", back_populates="attendance_status")
 
@@ -112,10 +87,8 @@ class GenderDistribution(Base):
     )
 
     female_count = Column(Integer, nullable=False)
-    female_percent = Column(Float, nullable=False)
     male_count = Column(Integer, nullable=False)
-    male_percent = Column(Float, nullable=False)
-
+  
     snapshot = relationship("Snapshot", back_populates="gender_distribution")
 
 
@@ -128,8 +101,6 @@ class StreamsBreakdown(Base):
     )
 
     science_count = Column(Integer, nullable=False)
-    science_percent = Column(Float, nullable=False)
     social_science_count = Column(Integer, nullable=False)
-    social_science_percent = Column(Float, nullable=False)
 
     snapshot = relationship("Snapshot", back_populates="streams_breakdown")

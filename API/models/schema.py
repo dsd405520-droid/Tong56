@@ -1,8 +1,6 @@
 from pydantic import BaseModel
 from typing import List
 
-
-# ---------- school data ----------
 class NormalAttendance(BaseModel):
     count: int
     percent: float
@@ -24,19 +22,13 @@ class GradeLevel(BaseModel):
     grade: str
     total: int
     normal: int
-    absent: int
-
 
 class MonthlyTrend(BaseModel):
     month: str
     attendance_percent: float
-    absent_percent: float
-
 
 class StatusEntry(BaseModel):
     count: float
-    percent: float
-
 
 class AttendanceStatus(BaseModel):
     on_time: StatusEntry
@@ -47,8 +39,6 @@ class AttendanceStatus(BaseModel):
 
 class GenderEntry(BaseModel):
     count: int
-    percent: float
-
 
 class GenderDistribution(BaseModel):
     female: GenderEntry
@@ -57,7 +47,6 @@ class GenderDistribution(BaseModel):
 
 class StreamEntry(BaseModel):
     count: int
-    percent: float
 
 
 class StreamsBreakdown(BaseModel):

@@ -1,14 +1,3 @@
-"""
-Load school_data.json directly into the database as one Snapshot.
-
-No fake students, no random generation -- just takes the numbers already
-in the JSON and stores them relationally. Runs instantly since it's only
-inserting ~11 rows total (1 snapshot + 7 grades + 3 months + 3 single rows).
-
-Usage:
-    python seed.py
-"""
-
 import json
 from pathlib import Path
 
@@ -49,7 +38,6 @@ def main():
                 grade=row["grade"],
                 total=row["total"],
                 normal=row["normal"],
-                absent=row["absent"],
             ))
 
         for row in data["monthly_attendance_trend"]:
@@ -57,38 +45,29 @@ def main():
                 snapshot_id=snapshot.id,
                 month=row["month"],
                 attendance_percent=row["attendance_percent"],
-                absent_percent=row["absent_percent"],
             ))
 
         status = data["attendance_status"]
         db.add(AttendanceStatus(
             snapshot_id=snapshot.id,
             on_time_count=status["on_time"]["count"],
-            on_time_percent=status["on_time"]["percent"],
             late_count=status["late"]["count"],
-            late_percent=status["late"]["percent"],
             leave_count=status["leave"]["count"],
-            leave_percent=status["leave"]["percent"],
             absent_count=status["absent"]["count"],
-            absent_percent=status["absent"]["percent"],
         ))
 
         gender = data["gender_distribution"]
         db.add(GenderDistribution(
             snapshot_id=snapshot.id,
             female_count=gender["female"]["count"],
-            female_percent=gender["female"]["percent"],
             male_count=gender["male"]["count"],
-            male_percent=gender["male"]["percent"],
         ))
 
         streams = data["streams_breakdown"]
         db.add(StreamsBreakdown(
             snapshot_id=snapshot.id,
             science_count=streams["science"]["count"],
-            science_percent=streams["science"]["percent"],
             social_science_count=streams["social_science"]["count"],
-            social_science_percent=streams["social_science"]["percent"],
         ))
 
         db.commit()
