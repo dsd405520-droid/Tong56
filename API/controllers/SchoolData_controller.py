@@ -87,53 +87,115 @@ def _serialize_streams_breakdown(row: StreamsBreakdown) -> dict:
 
 
 async def get_all_school_data(db: Session = Depends(get_db)):
-    snapshot = _latest_snapshot(db)
-    return {
-        "summary": _serialize_summary(snapshot),
-        "grade_level_breakdown": _serialize_grade_levels(snapshot.grade_levels),
-        "monthly_attendance_trend": _serialize_monthly_trend(snapshot.monthly_trends),
-        "attendance_status": _serialize_attendance_status(snapshot.attendance_status),
-        "gender_distribution": _serialize_gender_distribution(snapshot.gender_distribution),
-        "streams_breakdown": _serialize_streams_breakdown(snapshot.streams_breakdown),
-    }
+    try:
+        snapshot = _latest_snapshot(db)
+        data = {
+            "summary": _serialize_summary(snapshot),
+            "grade_level_breakdown": _serialize_grade_levels(snapshot.grade_levels),
+            "monthly_attendance_trend": _serialize_monthly_trend(snapshot.monthly_trends),
+            "attendance_status": _serialize_attendance_status(snapshot.attendance_status),
+            "gender_distribution": _serialize_gender_distribution(snapshot.gender_distribution),
+            "streams_breakdown": _serialize_streams_breakdown(snapshot.streams_breakdown),
+        }
+        return {"data": data, "msg": "School data retrieved successfully", "status": "success"}
+
+    except HTTPException:
+        raise
+    except Exception as err:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(err))
 
 
 async def get_summary(db: Session = Depends(get_db)):
-    snapshot = _latest_snapshot(db)
-    return _serialize_summary(snapshot)
+    try:
+        snapshot = _latest_snapshot(db)
+        data = _serialize_summary(snapshot)
+        return {"data": data, "msg": "Summary retrieved successfully", "status": "success"}
+
+    except HTTPException:
+        raise
+    except Exception as err:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(err))
 
 
 async def get_grade_level_breakdown(db: Session = Depends(get_db)):
-    snapshot = _latest_snapshot(db)
-    return _serialize_grade_levels(snapshot.grade_levels)
+    try:
+        snapshot = _latest_snapshot(db)
+        data = _serialize_grade_levels(snapshot.grade_levels)
+        return {"data": data, "msg": "Grade level breakdown retrieved successfully", "status": "success"}
+
+    except HTTPException:
+        raise
+    except Exception as err:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(err))
 
 
 async def get_grade_level_by_name(grade: str, db: Session = Depends(get_db)):
-    snapshot = _latest_snapshot(db)
-    for row in snapshot.grade_levels:
-        if row.grade == grade:
-            return {"grade": row.grade, "total": row.total, "normal": row.normal, "absent": row.total - row.normal}
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Grade not found")
+    try:
+        snapshot = _latest_snapshot(db)
+        for row in snapshot.grade_levels:
+            if row.grade == grade:
+                data = {
+                    "grade": row.grade,
+                    "total": row.total,
+                    "normal": row.normal,
+                    "absent": row.total - row.normal,
+                }
+                return {"data": data, "msg": "Grade level retrieved successfully", "status": "success"}
+
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Grade not found")
+
+    except HTTPException:
+        raise
+    except Exception as err:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(err))
 
 
 async def get_monthly_attendance_trend(db: Session = Depends(get_db)):
-    snapshot = _latest_snapshot(db)
-    return _serialize_monthly_trend(snapshot.monthly_trends)
+    try:
+        snapshot = _latest_snapshot(db)
+        data = _serialize_monthly_trend(snapshot.monthly_trends)
+        return {"data": data, "msg": "Monthly attendance trend retrieved successfully", "status": "success"}
+
+    except HTTPException:
+        raise
+    except Exception as err:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(err))
 
 
 async def get_attendance_status(db: Session = Depends(get_db)):
-    snapshot = _latest_snapshot(db)
-    return _serialize_attendance_status(snapshot.attendance_status)
+    try:
+        snapshot = _latest_snapshot(db)
+        data = _serialize_attendance_status(snapshot.attendance_status)
+        return {"data": data, "msg": "Attendance status retrieved successfully", "status": "success"}
+
+    except HTTPException:
+        raise
+    except Exception as err:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(err))
 
 
 async def get_gender_distribution(db: Session = Depends(get_db)):
-    snapshot = _latest_snapshot(db)
-    return _serialize_gender_distribution(snapshot.gender_distribution)
+    try:
+        snapshot = _latest_snapshot(db)
+        data = _serialize_gender_distribution(snapshot.gender_distribution)
+        return {"data": data, "msg": "Gender distribution retrieved successfully", "status": "success"}
+
+    except HTTPException:
+        raise
+    except Exception as err:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(err))
 
 
 async def get_streams_breakdown(db: Session = Depends(get_db)):
-    snapshot = _latest_snapshot(db)
-    return _serialize_streams_breakdown(snapshot.streams_breakdown)
+    try:
+        snapshot = _latest_snapshot(db)
+        data = _serialize_streams_breakdown(snapshot.streams_breakdown)
+        return {"data": data, "msg": "Streams breakdown retrieved successfully", "status": "success"}
+
+    except HTTPException:
+        raise
+    except Exception as err:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(err))
 
 
 async def update_school_data(new_data: dict, db: Session = Depends(get_db)):
@@ -197,7 +259,11 @@ async def update_school_data(new_data: dict, db: Session = Depends(get_db)):
         ))
 
         db.commit()
-        return {"msg": "School data updated successfully", "snapshot_id": snapshot.id}
+        return {
+            "data": {"snapshot_id": snapshot.id},
+            "msg": "School data updated successfully",
+            "status": "success",
+        }
 
     except KeyError as err:
         db.rollback()
@@ -205,6 +271,9 @@ async def update_school_data(new_data: dict, db: Session = Depends(get_db)):
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Missing required field: {err}"
         )
+    except HTTPException:
+        db.rollback()
+        raise
     except Exception as err:
         db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(err))

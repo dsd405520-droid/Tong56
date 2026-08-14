@@ -1,8 +1,7 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../config/api_config.dart';
+import 'http_client.dart';
 
 class AuthUser {
   final int id;
@@ -19,8 +18,13 @@ class AuthUser {
 }
 
 class AuthService {
-  static const _tokenKey = 'auth_token';
-  static const _isAdminKey = 'is_admin';
+  // In-memory cache of the current user, populated on login/me. This is NOT
+  // persisted anywhere (no SharedPreferences, no localStorage) -- it just
+  // avoids an extra network round trip for isAdmin()/currentUser() calls
+  // within the same app session. It's lost on refresh, which is fine: the
+  // cookie is what actually keeps you logged in, and isLoggedIn()/me() will
+  // repopulate this cache on app startup.
+  static AuthUser? _cachedUser;
 
   static String _extractErrorMessage(dynamic body, int statusCode) {
     final detail = body is Map ? body['detail'] : null;
@@ -41,8 +45,13 @@ class AuthService {
     return 'Request failed ($statusCode)';
   }
 
+  // NOTE: no more manual token storage. The browser stores and sends the
+  // httpOnly cookie automatically on every request to the backend, as long
+  // as `credentials: 'include'` is set (done via http.Client + withCredentials
+  // below, or by using package:http's default browser behavior with credentials).
+
   static Future<AuthUser> login(String email, String password) async {
-    final res = await http.post(
+    final res = await apiClient.post(
       Uri.parse('${ApiConfig.baseUrl}/auth/login'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'email': email, 'password': password}),
@@ -54,18 +63,14 @@ class AuthService {
       throw Exception(_extractErrorMessage(json, res.statusCode));
     }
 
-    final token = json['access_token'] as String;
-    final user = AuthUser.fromJson(json['user']);
-
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_tokenKey, token);
-    await prefs.setBool(_isAdminKey, user.isAdmin);
-
+    final data = json['data'] as Map<String, dynamic>;
+    final user = AuthUser.fromJson(data);
+    _cachedUser = user;
     return user;
   }
 
   static Future<void> signup(String email, String password) async {
-    final res = await http.post(
+    final res = await apiClient.post(
       Uri.parse('${ApiConfig.baseUrl}/auth/signup'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'email': email, 'password': password}),
@@ -79,7 +84,7 @@ class AuthService {
   }
 
   static Future<void> verifyEmail(String email, String code) async {
-    final res = await http.post(
+    final res = await apiClient.post(
       Uri.parse('${ApiConfig.baseUrl}/auth/verify-email'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'email': email, 'code': code}),
@@ -93,7 +98,7 @@ class AuthService {
   }
 
   static Future<void> forgotPassword(String email) async {
-    final res = await http.post(
+    final res = await apiClient.post(
       Uri.parse('${ApiConfig.baseUrl}/auth/forgot-password'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'email': email}),
@@ -108,7 +113,7 @@ class AuthService {
 
   static Future<void> resetPassword(
       String email, String code, String newPassword) async {
-    final res = await http.post(
+    final res = await apiClient.post(
       Uri.parse('${ApiConfig.baseUrl}/auth/reset-password'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(
@@ -123,31 +128,33 @@ class AuthService {
   }
 
   static Future<void> logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_tokenKey);
-    await prefs.remove(_isAdminKey);
+    await apiClient.post(Uri.parse('${ApiConfig.baseUrl}/auth/logout'));
+    _cachedUser = null;
   }
 
-  static Future<String?> getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_tokenKey);
+  // "Am I logged in?" can no longer be answered locally (no token to check),
+  // since the cookie is httpOnly and invisible to Dart/JS. Instead, ask the
+  // backend by hitting /auth/me -- if it succeeds, you're logged in, and we
+  // cache the returned user for isAdmin()/currentUser() to use afterward.
+  static Future<bool> isLoggedIn() async {
+    final res = await apiClient.get(Uri.parse('${ApiConfig.baseUrl}/auth/me'));
+    if (res.statusCode != 200) {
+      _cachedUser = null;
+      return false;
+    }
+    final json = jsonDecode(utf8.decode(res.bodyBytes));
+    final data = json['data'] as Map<String, dynamic>;
+    _cachedUser = AuthUser.fromJson(data);
+    return true;
   }
+
+  static AuthUser? get currentUser => _cachedUser;
 
   static Future<bool> isAdmin() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_isAdminKey) ?? false;
-  }
-
-  static Future<bool> isLoggedIn() async {
-    final token = await getToken();
-    return token != null && token.isNotEmpty;
-  }
-
-  static Future<Map<String, String>> authHeaders() async {
-    final token = await getToken();
-    return {
-      'Content-Type': 'application/json',
-      if (token != null) 'Authorization': 'Bearer $token',
-    };
+    if (_cachedUser == null) {
+      final loggedIn = await isLoggedIn();
+      if (!loggedIn) return false;
+    }
+    return _cachedUser!.isAdmin;
   }
 }

@@ -1,16 +1,22 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 
 import '../config/api_config.dart';
 import '../models/school_data.dart';
+import 'http_client.dart';
 
 class SchoolDataService {
   static Future<SchoolData> fetchAll() async {
-    final res = await http.get(Uri.parse('${ApiConfig.schoolDataBaseUrl}/all'));
+    final res = await apiClient.get(
+      Uri.parse('${ApiConfig.schoolDataBaseUrl}/all'),
+    );
+
     if (res.statusCode != 200) {
       throw Exception('Failed to load school data (${res.statusCode})');
     }
+
     final Map<String, dynamic> json = jsonDecode(utf8.decode(res.bodyBytes));
-    return SchoolData.fromJson(json);
+    final data = json['data'] as Map<String, dynamic>;
+
+    return SchoolData.fromJson(data);
   }
 }

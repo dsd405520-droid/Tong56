@@ -1,5 +1,5 @@
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import Depends, HTTPException, status, Request
+from fastapi.security import APIKeyCookie
 from sqlalchemy.orm import Session
 import jwt
 
@@ -7,14 +7,20 @@ from database import get_db
 from models.auth_models import User
 from utils.auth_utils import decode_access_token
 
-bearer_scheme = HTTPBearer()
+# auto_error=False so a missing cookie doesn't raise Swagger's generic 403 --
+# we raise our own clearer 401 below instead. This also registers a cookie-based
+# security scheme so Swagger shows the lock icon + Authorize button again.
+cookie_scheme = APIKeyCookie(name="access_token", auto_error=False)
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    request: Request,
+    token: str | None = Depends(cookie_scheme),
     db: Session = Depends(get_db),
 ) -> User:
-    token = credentials.credentials
+    if not token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+
     try:
         payload = decode_access_token(token)
     except jwt.ExpiredSignatureError:
