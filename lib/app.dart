@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:student_dashboard/pages/login_page.dart';
 
-//import 'screens/dashboard_screen.dart';
+import 'widgets/auth_gate.dart';
 
 class StudentDashboardApp extends StatelessWidget {
   const StudentDashboardApp({super.key});
@@ -25,7 +24,7 @@ class StudentDashboardApp extends StatelessWidget {
         fontFamily: 'NotoSansLao',
       ),
       themeMode: ThemeMode.system,
-      home: const LoginPage(),
+      home: const AuthGate(),
     );
   }
 }
